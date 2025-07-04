@@ -1,85 +1,74 @@
-﻿using Microsoft.AspNetCore.Http;
+﻿using AutoMapper;
+using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.EntityFrameworkCore;
 using SuperheroAPI.Data;
+using SuperheroAPI.DTO;
+using SuperheroAPI.Interfaces_und_Repository;
 using SuperheroAPI.Models;
 
 namespace SuperheroAPI.Controllers
 {
     [Route("api/[controller]")]
     [ApiController]
-    public class SuperheroController : ControllerBase
+    public class SuperheroController(ISuperheroRepository superheroRepository, IMapper mapper) : ControllerBase
     {
         private readonly DataContext _context;
-
-        public SuperheroController(DataContext context)
-        {
-         }
+        private readonly ISuperheroRepository _superheroRepository = superheroRepository;
+        private readonly IMapper _mapper = mapper;
 
         [HttpGet]
         [Route("getAllHeroes")]
-        public ICollection<Superhero> GetSuperHero()
+        public async Task<ActionResult<List<SuperheroDTO>>> GetSuperheroes()
         {
-            return [.. _context.Superheroes];
+            ICollection<Superhero> heroes = await _superheroRepository.GetAllSuperheroes();
+            List<SuperheroDTO> heroesDto = _mapper.Map<List<SuperheroDTO>>(heroes);
+            return Ok(heroesDto);
         }
 
         [HttpPost]
-        public async Task<ActionResult<List<Superhero>>> AddHero(Superhero hero)
+        public async Task<ActionResult> AddHero([FromBody] CreateSuperheroDTO hero)
         {
-            _context.Superheroes.Add(hero);
+            Superhero mappedHero = _mapper.Map<Superhero>(hero);
+            _context.Superheroes.Add(mappedHero);
             await _context.SaveChangesAsync();
-
-            return Ok(await  _context.Superheroes.ToListAsync());
+            return Ok(hero);
         }
 
-        [HttpGet("{id}")]
-        public async Task<ActionResult<Superhero>> GetHero(int id)
+            [HttpGet("{id}")]
+        public async Task<ActionResult<SuperheroDTO>> GetHero(Guid id)
         {
-            var hero = await _context.Superheroes.FindAsync(id);
-            if (hero is null)
-            {
-                return NotFound("Hero not found");
-            }
-            else
-            {
-                return Ok(hero);
-            }
+            var hero = await _superheroRepository.GetSuperheroById(id);
+            if (hero is null) return NotFound("Hero not found");
+            var heroDTO = _mapper.Map<SuperheroDTO>(hero);
+            return Ok(heroDTO);
+
         }
 
         [HttpPut]
-        public async Task<ActionResult<Superhero>> UpdateHero(Superhero updatedHero)
+        public async Task<ActionResult> UpdateHero(Guid id, [FromBody] UpdateSuperheroDTO heroDto)  //afgrunde von update wird auch vererbt superhero mit namen etc deswegen nciht mehr schreiebn selebr
         {
-            var dbHero = await _context.Superheroes.FindAsync(updatedHero.Id);
-            if (dbHero is null)
-            {
+            var existingHero = await _superheroRepository.GetSuperheroById(id);
+            if (existingHero == null)
                 return NotFound("Hero not found");
-            }
-            else
-            {
-                dbHero.Name = updatedHero.Name;
-                dbHero.FirstName = updatedHero.FirstName;
-                dbHero.LastName = updatedHero.LastName;
-                dbHero.Place = updatedHero.Place;
 
-                await _context.SaveChangesAsync();
-            }
-            return Ok(await _context.Superheroes.ToListAsync());  
+            _mapper.Map(heroDto, existingHero); // 
+
+            await _superheroRepository.UpdateSuperhero(existingHero);
+            var updatedHeroDTO = _mapper.Map<SuperheroDTO>(existingHero);
+            return Ok(updatedHeroDTO);
         }
 
         [HttpDelete]
-        public async Task<ActionResult<List<Superhero>>> DeleteHero(int Id)
+        public async Task<ActionResult> DeleteHero(Guid id)
         {
-            var hero = await _context.Superheroes.FindAsync(Id);
-            if (hero is null)
-            {
+            var hero = await _superheroRepository.GetSuperheroById(id);
+            if (hero == null)
                 return NotFound("Hero not found");
-            }
-            else
-            {
-                _context.Superheroes.Remove(hero);
-                await _context.SaveChangesAsync();
-            }
-            return Ok(await _context.Superheroes.ToListAsync());
+
+            await _superheroRepository.DeleteSuperheroById(id);
+
+            return NoContent();
         }
     }
 }
