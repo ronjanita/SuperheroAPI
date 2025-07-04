@@ -6,8 +6,11 @@ namespace SuperheroAPI.Interfaces_und_Repository
     public class SuperheroRepository(DataContext context) : ISuperheroRepository
     {
         private readonly DataContext _context = context;
-        async Task<string> ISuperheroRepository.CreateSuperhero(Superhero newSuperhero)
+        async Task<Superhero> ISuperheroRepository.CreateSuperhero(Superhero newSuperhero)
         {
+            await _context.Superheroes.AddAsync(newSuperhero);
+            await _context.SaveChangesAsync();
+            return newSuperhero;
             throw new NotImplementedException();
         }
 
