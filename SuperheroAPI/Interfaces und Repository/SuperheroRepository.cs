@@ -1,35 +1,37 @@
-﻿using SuperheroAPI.Models;
+﻿using SuperheroAPI.Data;
+using SuperheroAPI.Models;
 
 namespace SuperheroAPI.Interfaces_und_Repository
 {
-    public class SuperheroRepository : ISuperheroRepository
+    public class SuperheroRepository(DataContext context) : ISuperheroRepository
     {
-        Task<string> ISuperheroRepository.CreateSuperhero(Superhero newSuperhero)
+        private readonly DataContext _context = context;
+        async Task<string> ISuperheroRepository.CreateSuperhero(Superhero newSuperhero)
         {
             throw new NotImplementedException();
         }
 
-        Task<bool> ISuperheroRepository.DeleteSuperheroById(Guid id)
+        async Task<bool> ISuperheroRepository.DeleteSuperheroById(Guid id)
         {
             throw new NotImplementedException();
         }
 
-        Task<ICollection<Superhero>> ISuperheroRepository.GetAllSuperheroes()
+        async Task<ICollection<Superhero>> ISuperheroRepository.GetAllSuperheroes()
         {
             throw new NotImplementedException();
         }
 
-        Task<string> ISuperheroRepository.GetSuperheroById(Guid id)
+        async Task<string> ISuperheroRepository.GetSuperheroById(Guid id)
         {
             throw new NotImplementedException();
         }
 
-        Task<bool> ISuperheroRepository.SaveChangesAsync(Superhero newSuperhero)
+        async Task<bool> ISuperheroRepository.SaveChangesAsync(Superhero newSuperhero)
         {
             throw new NotImplementedException();
         }
 
-        Task<bool> ISuperheroRepository.UpdateSuperhero(Superhero updatedSuperhero)
+        async Task<bool> ISuperheroRepository.UpdateSuperhero(Superhero updatedSuperhero)
         {
             throw new NotImplementedException();
         }
